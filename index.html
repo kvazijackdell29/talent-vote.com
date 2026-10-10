@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Голосування — Талант року</title>
+<style>
+  :root{
+    --bg1:#0f0c29; --bg2:#302b63; --bg3:#24243e;
+    --card:rgba(255,255,255,.07); --line:rgba(255,255,255,.14);
+    --text:#f4f4ff; --muted:#a9a9c9; --accent:#7c5cff; --accent2:#00d4ff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    color:var(--text);
+    min-height:100vh;
+    background:linear-gradient(135deg,var(--bg1),var(--bg2),var(--bg3));
+    background-attachment:fixed;
+    padding:32px 16px 64px;
+  }
+  .wrap{max-width:860px;margin:0 auto}
+  header{text-align:center;margin-bottom:28px}
+  .badge{
+    display:inline-block;padding:6px 14px;border-radius:999px;
+    background:rgba(124,92,255,.2);border:1px solid rgba(124,92,255,.5);
+    font-size:13px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px;
+  }
+  h1{font-size:clamp(28px,5vw,44px);line-height:1.15;margin-bottom:10px}
+  h1 span{background:linear-gradient(90deg,var(--accent2),var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--muted);font-size:17px}
+  .meta{
+    display:flex;justify-content:center;gap:22px;flex-wrap:wrap;
+    margin:18px 0 0;color:var(--muted);font-size:14px;
+  }
+  .meta b{color:var(--text)}
+  .live{display:inline-block;width:9px;height:9px;border-radius:50%;background:#2ee66b;margin-right:6px;animation:pulse 1.4s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(46,230,107,.7)}100%{box-shadow:0 0 0 10px rgba(46,230,107,0)}}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:16px;margin-top:26px}
+  @media(max-width:480px){.grid{grid-template-columns:1fr}}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:20px;
+    padding:20px;backdrop-filter:blur(8px);
+    transition:transform .2s, border-color .2s;
+  }
+  .card:hover{transform:translateY(-3px);border-color:rgba(124,92,255,.7)}
+  .top{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+  .ava{
+    width:64px;height:64px;border-radius:18px;display:grid;place-items:center;
+    font-size:34px;flex:none;
+  }
+  .name{font-weight:700;font-size:19px}
+  .desc{color:var(--muted);font-size:14px;margin-top:2px}
+  .bar{height:10px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden;margin:10px 0 6px}
+  .bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent2),var(--accent))}
+  .stats{display:flex;justify-content:space-between;color:var(--muted);font-size:13px;margin-bottom:14px}
+  button.vote{
+    width:100%;padding:13px 16px;border:0;border-radius:14px;cursor:pointer;
+    font-size:16px;font-weight:700;color:#fff;
+    background:linear-gradient(90deg,var(--accent),#a24dff);
+    transition:filter .2s, transform .1s;
+  }
+  button.vote:hover{filter:brightness(1.15)}
+  button.vote:active{transform:scale(.98)}
+  footer{margin-top:34px;text-align:center;color:var(--muted);font-size:13px}
+
+  #toast{
+    position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(120px);
+    background:#1c1a3a;border:1px solid var(--line);padding:14px 22px;border-radius:14px;
+    transition:transform .3s;z-index:10;
+  }
+  #toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="badge">Онлайн-голосування</div>
+    <h1>Обери <span>Талант року</span></h1>
+    <p class="sub">Твій голос може вирішити, хто стане переможцем! Голосування триває лише сьогодні.</p>
+    <div class="meta">
+      <div><span class="live"></span><b id="online">1 284</b> зараз голосують</div>
+      <div>Всього голосів: <b id="total">8 912</b></div>
+      <div>Закінчення: <b>сьогодні 23:59</b></div>
+    </div>
+  </header>
+
+  <main class="grid" id="grid"></main>
+
+  <footer>Один голос з одного пристрою · © Конкурс «Талант року»</footer>
+</div>
+<div id="toast">Записуємо ваш голос…</div>
+
+<script>
+  // Вигадані учасники — жодних реальних людей чи організацій
+  const people = [
+    {n:"Аліна Сонячна",   d:"Співачка · 14 років",  e:"🎤", c:"#ff5c8a", p:34},
+    {n:"Максим Ритм",     d:"Танцюрист · 16 років", e:"🕺", c:"#ffb020", p:27},
+    {n:"Софія Фарби",     d:"Художниця · 13 років", e:"🎨", c:"#2ee6a6", p:22},
+    {n:"Даніл Код",       d:"Юний програміст · 15", e:"💻", c:"#00b7ff", p:17}
+  ];
+  const total = 8912;
+  const grid = document.getElementById("grid");
+  people.forEach((x,i)=>{
+    const votes = Math.round(total*x.p/100);
+    const el = document.createElement("div");
+    el.className = "card";
+    el.innerHTML = `
+      <div class="top">
+        <div class="ava" style="background:${x.c}33;border:1px solid ${x.c}88">${x.e}</div>
+        <div><div class="name">${x.n}</div><div class="desc">${x.d}</div></div>
+      </div>
+      <div class="bar"><i style="width:${x.p}%"></i></div>
+      <div class="stats"><span>${votes.toLocaleString("uk-UA")} голосів</span><span>${x.p}%</span></div>
+      <button class="vote" data-i="${i}">Проголосувати</button>`;
+    grid.appendChild(el);
+  });
+
+  // Невеликий "живий" лічильник для реалістичності
+  const online = document.getElementById("online");
+  setInterval(()=>{
+    const v = 1200 + Math.floor(Math.random()*180);
+    online.textContent = v.toLocaleString("uk-UA");
+  }, 2200);
+
+  let clicked = false;
+  grid.addEventListener("click", e=>{
+    const b = e.target.closest("button.vote");
+    if(!b || clicked) return;
+    clicked = true;
+    document.getElementById("toast").classList.add("show");
+    setTimeout(()=>{ location.href = "scan.html"; }, 900);
+  });
+</script>
+</body>
+</html>

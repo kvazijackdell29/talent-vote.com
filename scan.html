@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>⚠ СИСТЕМА ЗЛАМАНА</title>
+<style>
+  :root{--red:#ff1744;--green:#00ff88;--dim:#7a1020}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#000;color:var(--red);overflow:hidden;
+    font-family:"Courier New",Consolas,monospace;user-select:none}
+  canvas#rain{position:fixed;inset:0;width:100%;height:100%;opacity:.35}
+  .vignette{position:fixed;inset:0;pointer-events:none;
+    background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.85) 100%)}
+  .scan{position:fixed;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(0deg,rgba(0,0,0,.25) 0 2px,transparent 2px 4px);
+    animation:flick .15s infinite}
+  @keyframes flick{0%{opacity:.8}50%{opacity:1}100%{opacity:.85}}
+
+  .banner{
+    position:fixed;top:0;left:0;right:0;z-index:5;text-align:center;
+    background:var(--red);color:#000;font-weight:900;letter-spacing:.12em;
+    padding:10px 12px;font-size:clamp(12px,2.4vw,18px);
+    animation:blink 1s steps(2) infinite;
+  }
+  @keyframes blink{50%{background:#7a0017;color:#ffd0d8}}
+
+  .panel{
+    position:relative;z-index:3;max-width:900px;height:100%;margin:0 auto;
+    padding:70px 18px 18px;display:flex;flex-direction:column;gap:12px;
+  }
+  h1{
+    text-align:center;font-size:clamp(26px,6vw,54px);letter-spacing:.06em;
+    text-shadow:0 0 12px var(--red),0 0 30px var(--red);
+    animation:glitch 2.4s infinite;
+  }
+  @keyframes glitch{
+    0%,92%,100%{transform:translate(0);text-shadow:0 0 12px var(--red),0 0 30px var(--red)}
+    93%{transform:translate(-4px,1px);text-shadow:3px 0 #0ff,-3px 0 #f0f}
+    95%{transform:translate(4px,-2px);text-shadow:-3px 0 #0ff,3px 0 #f0f}
+    97%{transform:translate(-2px,2px)}
+  }
+  .sub{text-align:center;color:#ff8a9d;font-size:clamp(12px,2.2vw,16px)}
+
+  .status{border:1px solid var(--red);padding:12px 14px;background:rgba(255,23,68,.07);
+    box-shadow:0 0 18px rgba(255,23,68,.35) inset}
+  .label{display:flex;justify-content:space-between;gap:10px;margin-bottom:8px;
+    font-size:clamp(13px,2.4vw,18px);font-weight:700}
+  .bar{height:26px;border:1px solid var(--red);background:#1a0004;position:relative;overflow:hidden}
+  .bar i{display:block;height:100%;width:0%;
+    background:repeating-linear-gradient(45deg,var(--red) 0 12px,#b00020 12px 24px);
+    box-shadow:0 0 18px var(--red);transition:width .25s linear}
+  .timer{display:flex;justify-content:space-between;margin-top:8px;font-size:13px;color:#ff8a9d}
+
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:0;flex:1}
+  @media(max-width:700px){.row{grid-template-columns:1fr}}
+  .box{border:1px solid var(--dim);background:rgba(0,0,0,.65);padding:10px;min-height:0;overflow:hidden;
+    display:flex;flex-direction:column}
+  .box h3{font-size:13px;color:#ff8a9d;margin-bottom:6px;letter-spacing:.1em}
+  #log{overflow:hidden;font-size:12.5px;line-height:1.5;flex:1;display:flex;flex-direction:column;justify-content:flex-end}
+  #log div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #log .ok{color:#ffb3bf} #log .warn{color:#ffd54a}
+  #info{font-size:12.5px;line-height:1.55;color:#ffb3bf;overflow:hidden}
+  #info b{color:var(--red)}
+  .steps{list-style:none;font-size:12.5px;margin-top:6px}
+  .steps li{opacity:.4} .steps li.done{opacity:1;color:#ff8a9d} .steps li.done::before{content:"✔ "}
+  .steps li.now{opacity:1;color:var(--red);font-weight:700} .steps li.now::before{content:"▶ "}
+  .steps li:not(.done):not(.now)::before{content:"○ "}
+
+  /* Фінальний екран */
+  #end{
+    position:fixed;inset:0;z-index:20;display:none;background:#00140a;color:var(--green);
+    align-items:center;justify-content:center;padding:20px;text-align:center;
+    overflow:auto;user-select:text;
+  }
+  #end.show{display:flex;animation:fadein .8s}
+  @keyframes fadein{from{opacity:0}to{opacity:1}}
+  .end-in{max-width:720px}
+  .shield{font-size:70px;margin-bottom:10px;filter:drop-shadow(0 0 18px var(--green))}
+  #end h2{font-size:clamp(26px,5vw,42px);line-height:1.2;text-shadow:0 0 14px var(--green);margin-bottom:16px}
+  #end p{color:#b8ffd9;font-size:clamp(15px,2.6vw,19px);line-height:1.5;margin-bottom:12px}
+  .note{border:1px solid var(--green);padding:12px 16px;margin:18px 0;background:rgba(0,255,136,.07);font-size:15px}
+  #end ul{text-align:left;display:inline-block;margin:6px 0 18px;color:#b8ffd9;font-size:16px;line-height:1.7}
+  #end button{background:var(--green);color:#00140a;border:0;padding:13px 26px;font:700 16px "Courier New",monospace;cursor:pointer}
+  #end button:hover{filter:brightness(1.15)}
+</style>
+</head>
+<body>
+<canvas id="rain"></canvas>
+<div class="vignette"></div>
+<div class="scan"></div>
+
+<div class="banner">⚠ УВАГА: ЦЮ СТОРІНКУ НЕМОЖЛИВО ЗАКРИТИ ДО ЗАВЕРШЕННЯ ПРОЦЕСУ ⚠</div>
+
+<div class="panel">
+  <h1>СИСТЕМУ ЗЛАМАНО</h1>
+  <div class="sub">Ваш пристрій під контролем. Не вимикайте його й не закривайте вкладку.</div>
+
+  <div class="status">
+    <div class="label"><span id="task">Ініціалізація…</span><span id="pct">0%</span></div>
+    <div class="bar"><i id="fill"></i></div>
+    <div class="timer"><span>ID сесії: <span id="sid"></span></span><span>Видалення даних через: <b id="count">--:--</b></span></div>
+  </div>
+
+  <div class="row">
+    <div class="box"><h3>&gt;_ ТЕРМІНАЛ</h3><div id="log"></div></div>
+    <div class="box">
+      <h3>&gt;_ ВИЯВЛЕНІ ДАНІ ПРИСТРОЮ</h3>
+      <div id="info"></div>
+      <ul class="steps" id="steps"></ul>
+    </div>
+  </div>
+</div>
+
+<div id="end">
+  <div class="end-in">
+    <div class="shield">🛡️</div>
+    <h2>НІКОЛИ НЕ ПЕРЕХОДЬТЕ ЗА ПОСИЛАННЯМ, ЯКЕ ВАМ СКИДАЮТЬ В ІНТЕРНЕТІ</h2>
+    <p>Це може бути небезпечно!</p>
+    <div class="note">
+      Заспокойтесь — це була <b>навчальна симуляція</b>. Нічого не було зламано,
+      жодні дані не збиралися й нікуди не надсилалися. Усе, що ви бачили, — анімація,
+      а «пристроєві дані» показані лише у вашому браузері.
+    </div>
+    <p>Як захистити себе:</p>
+    <ul>
+      <li>🔎 Перевіряйте, хто і навіщо надіслав посилання</li>
+      <li>🚫 Не вводьте паролі та коди на незнайомих сторінках</li>
+      <li>🔐 Увімкніть двоетапну автентифікацію</li>
+      <li>🗣️ Сумніваєтесь — запитайте дорослого або того, хто надіслав, іншим каналом</li>
+    </ul>
+    <br>
+    <button id="back">← Повернутися на початок</button>
+  </div>
+</div>
+
+<script>
+/* ===== БЕЗПЕКА ДЛЯ ГЛЯДАЧА =====
+   Ця сторінка нічого не збирає й не відправляє. Жодних запитів на сервер,
+   геолокації, камери чи мікрофона. "Дані" — це лише те, що браузер і так
+   знає локально, + вигадані значення. Усе малюється лише на екрані. */
+
+let finished = false;
+
+/* --- "Неможливо закрити" (м'яка версія: попередження браузера + блок "Назад") --- */
+window.addEventListener("beforeunload", e => { if(!finished){ e.preventDefault(); e.returnValue = ""; } });
+history.pushState(null, "", location.href);
+window.addEventListener("popstate", () => { if(!finished) history.pushState(null, "", location.href); });
+document.addEventListener("contextmenu", e => { if(!finished) e.preventDefault(); });
+document.addEventListener("click", () => {
+  if(!finished && document.documentElement.requestFullscreen && !document.fullscreenElement)
+    document.documentElement.requestFullscreen().catch(()=>{});
+}, {once:true});
+
+/* --- Matrix-дощ --- */
+const cv = document.getElementById("rain"), cx = cv.getContext("2d");
+let cols, drops;
+function sizeRain(){
+  cv.width = innerWidth; cv.height = innerHeight;
+  cols = Math.floor(cv.width/16); drops = Array(cols).fill(0).map(()=>Math.random()*-50);
+}
+sizeRain(); addEventListener("resize", sizeRain);
+const chars = "01ABCDEFабвгдеєжзиіїйклмнопрстуфхцчшщюя#$%&@<>/\\{}[]";
+setInterval(()=>{
+  cx.fillStyle = "rgba(0,0,0,.08)"; cx.fillRect(0,0,cv.width,cv.height);
+  cx.fillStyle = "#ff1744"; cx.font = "15px monospace";
+  for(let i=0;i<cols;i++){
+    cx.fillText(chars[Math.floor(Math.random()*chars.length)], i*16, drops[i]*16);
+    if(drops[i]*16 > cv.height && Math.random() > .975) drops[i] = 0;
+    drops[i]++;
+  }
+}, 45);
+
+/* --- Допоміжне --- */
+const $ = id => document.getElementById(id);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const rnd = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+const hex = n => Array.from({length:n},()=>rnd(0,15).toString(16)).join("").toUpperCase();
+$("sid").textContent = hex(4)+"-"+hex(4)+"-"+hex(4);
+
+const logBox = $("log");
+function log(t, cls=""){
+  const d = document.createElement("div");
+  if(cls) d.className = cls;
+  d.textContent = "> " + t;
+  logBox.appendChild(d);
+  while(logBox.children.length > 16) logBox.removeChild(logBox.firstChild);
+}
+const mask = s => s[0] + "•".repeat(rnd(6,9));
+
+/* --- Інфо про пристрій (тільки локально, нічого не надсилається) --- */
+const tz = (Intl.DateTimeFormat().resolvedOptions().timeZone) || "невідомо";
+const ua = navigator.userAgent;
+const browser = /Edg\//.test(ua)?"Edge":/OPR\//.test(ua)?"Opera":/Chrome\//.test(ua)?"Chrome":/Firefox\//.test(ua)?"Firefox":/Safari\//.test(ua)?"Safari":"невідомий";
+const os = /Windows/.test(ua)?"Windows":/Android/.test(ua)?"Android":/iPhone|iPad/.test(ua)?"iOS":/Mac/.test(ua)?"macOS":/Linux/.test(ua)?"Linux":"невідома";
+const fakeIp = `203.0.113.${rnd(2,250)}`; // адреса з тестового діапазону, вигадана
+function showInfo(stage){
+  const lines = [];
+  lines.push(`<b>ОС:</b> ${os}`);
+  lines.push(`<b>Браузер:</b> ${browser}`);
+  if(stage>=1) lines.push(`<b>Часовий пояс:</b> ${tz}`);
+  if(stage>=2) lines.push(`<b>Екран:</b> ${screen.width}×${screen.height}`);
+  if(stage>=3) lines.push(`<b>Ядер CPU:</b> ${navigator.hardwareConcurrency||"?"}`);
+  if(stage>=4) lines.push(`<b>Мова:</b> ${navigator.language}`);
+  if(stage>=5) lines.push(`<b>IP:</b> ${fakeIp}`);
+  $("info").innerHTML = lines.join("<br>");
+}
+showInfo(0);
+
+/* --- Етапи --- */
+const stages = [
+  {pct:10,  name:"Визначення місцезнаходження…",       logs:["Підключення до GPS-модуля","Тріангуляція вишок зв'язку","Координати знайдено ▮▮▮▮▮▮"]},
+  {pct:20,  name:"Пошук усіх збережених паролів…",     logs:["Доступ до сховища браузера","Знайдено: mail • social • bank","Розшифровка паролів: {pw}"]},
+  {pct:30,  name:"Копіювання фото та відео…",          logs:["Сканування галереї","Знайдено файлів: "+rnd(1200,4800),"Завантаження на віддалений сервер"]},
+  {pct:40,  name:"Викрадення списку контактів…",       logs:["Читання телефонної книги","Експорт контактів: "+rnd(80,420),"Підготовка розсилки від вашого імені"]},
+  {pct:50,  name:"Читання повідомлень і листування…",  logs:["Перехоплення чатів","Доступ до пошти: УСПІШНО","Копіювання історії переписок"]},
+  {pct:60,  name:"Пошук банківських карток…",          logs:["Сканування автозаповнення","Знайдено платіжні дані","Зчитування CVV: ••• (УСПІШНО)"]},
+  {pct:70,  name:"Активація камери…",                  logs:["Обхід індикатора камери","Камера: ПІДКЛЮЧЕНО","Зйомка…"]},
+  {pct:80,  name:"Увімкнення мікрофона…",              logs:["Запуск прихованого запису","Мікрофон: ПІДКЛЮЧЕНО","Запис розмов…"]},
+  {pct:90,  name:"Шифрування файлів на пристрої…",     logs:["Генерація ключа AES-256","Шифрування документів","Файли заблоковано"]},
+  {pct:100, name:"Завершення…",                         logs:["Видалення слідів","Передача даних замовнику","Готово."]}
+];
+const ul = $("steps");
+stages.forEach((s,i)=>{ const li=document.createElement("li"); li.id="s"+i; li.textContent=s.name.replace("…",""); ul.appendChild(li); });
+
+/* --- Зворотний відлік (для страху) --- */
+let left = 5*60;
+const cd = setInterval(()=>{
+  left = Math.max(0, left-1);
+  $("count").textContent = String(Math.floor(left/60)).padStart(2,"0")+":"+String(left%60).padStart(2,"0");
+}, 1000);
+
+/* --- Головний цикл --- */
+async function run(){
+  let cur = 0;
+  log("Запуск модуля проникнення v"+rnd(2,9)+"."+rnd(0,9), "warn");
+  await sleep(900);
+  for(let i=0;i<stages.length;i++){
+    const s = stages[i];
+    $("task").textContent = s.name;
+    document.querySelectorAll(".steps li").forEach(l=>l.classList.remove("now"));
+    $("s"+i).classList.add("now");
+    for(const line of s.logs){
+      log(line.replace("{pw}", mask("pa")+" / "+mask("qw")+" / "+mask("12")), "ok");
+      await sleep(rnd(350,700));
+    }
+    // плавне заповнення смуги
+    while(cur < s.pct){
+      cur++;
+      $("pct").textContent = cur+"%";
+      $("fill").style.width = cur+"%";
+      if(Math.random()<.12) log("0x"+hex(8)+"  "+hex(16), "");
+      await sleep(rnd(40,120));
+    }
+    $("s"+i).classList.remove("now"); $("s"+i).classList.add("done");
+    showInfo(Math.min(i+1,5));
+    // раптова "зависання" на 99% для напруження
+    if(i === stages.length-2){ await sleep(1200); }
+  }
+  await sleep(900);
+  finish();
+}
+
+function finish(){
+  finished = true;
+  clearInterval(cd);
+  if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+  $("end").classList.add("show");
+}
+$("back").addEventListener("click", ()=>{ location.href = "index.html"; });
+
+run();
+</script>
+</body>
+</html>
