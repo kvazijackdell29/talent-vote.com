@@ -2,87 +2,118 @@
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>⚠ СИСТЕМА ЗЛАМАНА</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>⚠ ІДЕ ЗЛОМ</title>
 <style>
   :root{--red:#ff1744;--green:#00ff88;--dim:#7a1020}
-  *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%;background:#000;color:var(--red);overflow:hidden;
-    font-family:"Courier New",Consolas,monospace;user-select:none}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  html,body{
+    height:100%;background:#000;color:var(--red);overflow:hidden;
+    font-family:"Courier New",Consolas,monospace;
+    -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+    overscroll-behavior:none;touch-action:manipulation;
+  }
+  body{display:flex;flex-direction:column;height:100vh;height:100dvh}
   canvas#rain{position:fixed;inset:0;width:100%;height:100%;opacity:.35}
   .vignette{position:fixed;inset:0;pointer-events:none;
     background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.85) 100%)}
   .scan{position:fixed;inset:0;pointer-events:none;
-    background:repeating-linear-gradient(0deg,rgba(0,0,0,.25) 0 2px,transparent 2px 4px);
-    animation:flick .15s infinite}
-  @keyframes flick{0%{opacity:.8}50%{opacity:1}100%{opacity:.85}}
+    background:repeating-linear-gradient(0deg,rgba(0,0,0,.25) 0 2px,transparent 2px 4px)}
 
+  /* Мигання: не частіше ~1–1.5 разів на секунду (безпечно для очей) */
   .banner{
-    position:fixed;top:0;left:0;right:0;z-index:5;text-align:center;
-    background:var(--red);color:#000;font-weight:900;letter-spacing:.12em;
-    padding:10px 12px;font-size:clamp(12px,2.4vw,18px);
-    animation:blink 1s steps(2) infinite;
+    position:relative;z-index:5;flex:none;text-align:center;
+    background:var(--red);color:#000;font-weight:900;letter-spacing:.06em;line-height:1.25;
+    padding:calc(8px + env(safe-area-inset-top)) 10px 8px;
+    font-size:clamp(11px,3.3vw,16px);
+    animation:blink 1s steps(2,jump-none) infinite;
   }
-  @keyframes blink{50%{background:#7a0017;color:#ffd0d8}}
+  @keyframes blink{0%{background:var(--red);color:#000}100%{background:#7a0017;color:#ffd0d8}}
+  .strip{
+    position:relative;z-index:5;flex:none;height:8px;
+    background:repeating-linear-gradient(45deg,var(--red) 0 10px,#000 10px 20px);
+    background-size:28.28px 28.28px;animation:move .6s linear infinite;
+  }
+  @keyframes move{to{background-position:28.28px 0}}
 
   .panel{
-    position:relative;z-index:3;max-width:900px;height:100%;margin:0 auto;
-    padding:70px 18px 18px;display:flex;flex-direction:column;gap:12px;
+    position:relative;z-index:3;flex:1;min-height:0;width:100%;max-width:900px;margin:0 auto;
+    padding:10px max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));
+    display:flex;flex-direction:column;gap:10px;
   }
   h1{
-    text-align:center;font-size:clamp(26px,6vw,54px);letter-spacing:.06em;
+    text-align:center;font-size:clamp(26px,9vw,54px);letter-spacing:.05em;line-height:1.1;
     text-shadow:0 0 12px var(--red),0 0 30px var(--red);
-    animation:glitch 2.4s infinite;
+    animation:glitch 2.4s infinite, blinkText .9s steps(2,jump-none) infinite;
   }
+  @keyframes blinkText{0%{opacity:1}100%{opacity:.3}}
   @keyframes glitch{
-    0%,92%,100%{transform:translate(0);text-shadow:0 0 12px var(--red),0 0 30px var(--red)}
+    0%,92%,100%{transform:translate(0)}
     93%{transform:translate(-4px,1px);text-shadow:3px 0 #0ff,-3px 0 #f0f}
     95%{transform:translate(4px,-2px);text-shadow:-3px 0 #0ff,3px 0 #f0f}
     97%{transform:translate(-2px,2px)}
   }
-  .sub{text-align:center;color:#ff8a9d;font-size:clamp(12px,2.2vw,16px)}
+  .sub{text-align:center;color:#ff8a9d;font-size:clamp(12px,3.4vw,16px);line-height:1.35}
+  @media(max-height:700px){.sub{display:none}}
 
-  .status{border:1px solid var(--red);padding:12px 14px;background:rgba(255,23,68,.07);
-    box-shadow:0 0 18px rgba(255,23,68,.35) inset}
-  .label{display:flex;justify-content:space-between;gap:10px;margin-bottom:8px;
-    font-size:clamp(13px,2.4vw,18px);font-weight:700}
-  .bar{height:26px;border:1px solid var(--red);background:#1a0004;position:relative;overflow:hidden}
+  .status{border:1px solid var(--red);padding:10px 12px;background:rgba(255,23,68,.08);
+    box-shadow:0 0 18px rgba(255,23,68,.35) inset;animation:glow 1.2s ease-in-out infinite alternate}
+  @keyframes glow{from{box-shadow:0 0 8px rgba(255,23,68,.25) inset,0 0 0 rgba(255,23,68,0)}
+    to{box-shadow:0 0 22px rgba(255,23,68,.5) inset,0 0 14px rgba(255,23,68,.45)}}
+  .label{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px;font-weight:700}
+  #task{font-size:clamp(12px,3.6vw,18px);min-width:0;overflow-wrap:anywhere;line-height:1.25}
+  #pct{font-size:clamp(20px,6.5vw,32px);flex:none;text-shadow:0 0 10px var(--red)}
+  .bar{height:24px;border:1px solid var(--red);background:#1a0004;overflow:hidden}
   .bar i{display:block;height:100%;width:0%;
     background:repeating-linear-gradient(45deg,var(--red) 0 12px,#b00020 12px 24px);
-    box-shadow:0 0 18px var(--red);transition:width .25s linear}
-  .timer{display:flex;justify-content:space-between;margin-top:8px;font-size:13px;color:#ff8a9d}
+    background-size:33.94px 33.94px;animation:move2 .5s linear infinite;
+    box-shadow:0 0 18px var(--red)}
+  @keyframes move2{to{background-position:33.94px 0}}
+  .chips{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin-top:8px}
+  @media(max-width:560px){.chips{grid-template-columns:repeat(5,1fr)}}
+  .chips span{text-align:center;font-size:11px;padding:3px 0;border:1px solid var(--dim);color:#a0505e}
+  .chips span.now{border-color:var(--red);color:var(--red);font-weight:700}
+  .chips span.done{background:var(--red);border-color:var(--red);color:#000;font-weight:700}
+  .timer{display:flex;justify-content:space-between;gap:8px;margin-top:8px;font-size:clamp(11px,3vw,13px);color:#ff8a9d}
 
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:0;flex:1}
-  @media(max-width:700px){.row{grid-template-columns:1fr}}
-  .box{border:1px solid var(--dim);background:rgba(0,0,0,.65);padding:10px;min-height:0;overflow:hidden;
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;min-height:0;flex:1}
+  @media(max-width:700px){.row{grid-template-columns:1fr;grid-template-rows:minmax(0,1.3fr) minmax(0,1fr)}}
+  .box{border:1px solid var(--dim);background:rgba(0,0,0,.65);padding:8px 10px;min-height:0;overflow:hidden;
     display:flex;flex-direction:column}
-  .box h3{font-size:13px;color:#ff8a9d;margin-bottom:6px;letter-spacing:.1em}
-  #log{overflow:hidden;font-size:12.5px;line-height:1.5;flex:1;display:flex;flex-direction:column;justify-content:flex-end}
+  .box h3{font-size:12px;color:#ff8a9d;margin-bottom:6px;letter-spacing:.1em;flex:none}
+  #log{overflow:hidden;font-size:12px;line-height:1.45;flex:1;min-height:0;display:flex;flex-direction:column;justify-content:flex-end}
   #log div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #log .ok{color:#ffb3bf} #log .warn{color:#ffd54a}
-  #info{font-size:12.5px;line-height:1.55;color:#ffb3bf;overflow:hidden}
+  #info{font-size:12px;line-height:1.5;color:#ffb3bf;overflow:hidden}
   #info b{color:var(--red)}
-  .steps{list-style:none;font-size:12.5px;margin-top:6px}
-  .steps li{opacity:.4} .steps li.done{opacity:1;color:#ff8a9d} .steps li.done::before{content:"✔ "}
-  .steps li.now{opacity:1;color:var(--red);font-weight:700} .steps li.now::before{content:"▶ "}
-  .steps li:not(.done):not(.now)::before{content:"○ "}
 
   /* Фінальний екран */
   #end{
     position:fixed;inset:0;z-index:20;display:none;background:#00140a;color:var(--green);
-    align-items:center;justify-content:center;padding:20px;text-align:center;
-    overflow:auto;user-select:text;
+    padding:max(20px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));
+    text-align:center;overflow:auto;-webkit-overflow-scrolling:touch;
+    -webkit-user-select:text;user-select:text;
   }
   #end.show{display:flex;animation:fadein .8s}
   @keyframes fadein{from{opacity:0}to{opacity:1}}
-  .end-in{max-width:720px}
-  .shield{font-size:70px;margin-bottom:10px;filter:drop-shadow(0 0 18px var(--green))}
-  #end h2{font-size:clamp(26px,5vw,42px);line-height:1.2;text-shadow:0 0 14px var(--green);margin-bottom:16px}
-  #end p{color:#b8ffd9;font-size:clamp(15px,2.6vw,19px);line-height:1.5;margin-bottom:12px}
-  .note{border:1px solid var(--green);padding:12px 16px;margin:18px 0;background:rgba(0,255,136,.07);font-size:15px}
-  #end ul{text-align:left;display:inline-block;margin:6px 0 18px;color:#b8ffd9;font-size:16px;line-height:1.7}
-  #end button{background:var(--green);color:#00140a;border:0;padding:13px 26px;font:700 16px "Courier New",monospace;cursor:pointer}
-  #end button:hover{filter:brightness(1.15)}
+  .end-in{max-width:720px;margin:auto}
+  .shield{font-size:clamp(52px,16vw,70px);margin-bottom:8px;filter:drop-shadow(0 0 18px var(--green))}
+  #end h2{font-size:clamp(21px,6vw,40px);line-height:1.2;text-shadow:0 0 14px var(--green);margin-bottom:14px}
+  #end p{color:#b8ffd9;font-size:clamp(15px,4vw,19px);line-height:1.5;margin-bottom:12px}
+  .note{border:1px solid var(--green);padding:12px 14px;margin:16px 0;background:rgba(0,255,136,.07);font-size:clamp(14px,3.8vw,16px);line-height:1.5;color:#b8ffd9}
+  #end ul{text-align:left;display:inline-block;margin:6px 0 16px;color:#b8ffd9;font-size:clamp(14px,4vw,16px);line-height:1.65;padding-left:4px;list-style:none}
+  .author{margin:6px 0 18px;font-size:clamp(14px,4vw,17px);color:var(--green);letter-spacing:.04em}
+  #end button{
+    background:var(--green);color:#00140a;border:0;padding:14px 26px;min-height:48px;
+    font:700 16px "Courier New",monospace;cursor:pointer;-webkit-appearance:none;appearance:none;
+  }
+  #end button:active{filter:brightness(1.2)}
+
+  @media(prefers-reduced-motion:reduce){
+    .banner,h1,.status,.strip,.bar i{animation:none}
+  }
 </style>
 </head>
 <body>
@@ -91,15 +122,17 @@
 <div class="scan"></div>
 
 <div class="banner">⚠ УВАГА: ЦЮ СТОРІНКУ НЕМОЖЛИВО ЗАКРИТИ ДО ЗАВЕРШЕННЯ ПРОЦЕСУ ⚠</div>
+<div class="strip"></div>
 
 <div class="panel">
-  <h1>СИСТЕМУ ЗЛАМАНО</h1>
+  <h1>Hacking - SSCVVD …</h1>
   <div class="sub">Ваш пристрій під контролем. Не вимикайте його й не закривайте вкладку.</div>
 
   <div class="status">
     <div class="label"><span id="task">Ініціалізація…</span><span id="pct">0%</span></div>
     <div class="bar"><i id="fill"></i></div>
-    <div class="timer"><span>ID сесії: <span id="sid"></span></span><span>Видалення даних через: <b id="count">--:--</b></span></div>
+    <div class="chips" id="chips"></div>
+    <div class="timer"><span>ID сесії: <span id="sid"></span></span><span>Видалення даних: <b id="count">00:15</b></span></div>
   </div>
 
   <div class="row">
@@ -107,7 +140,6 @@
     <div class="box">
       <h3>&gt;_ ВИЯВЛЕНІ ДАНІ ПРИСТРОЮ</h3>
       <div id="info"></div>
-      <ul class="steps" id="steps"></ul>
     </div>
   </div>
 </div>
@@ -120,7 +152,7 @@
     <div class="note">
       Заспокойтесь — це була <b>навчальна симуляція</b>. Нічого не було зламано,
       жодні дані не збиралися й нікуди не надсилалися. Усе, що ви бачили, — анімація,
-      а «пристроєві дані» показані лише у вашому браузері. Автор - Kapys Roman.
+      а «дані пристрою» показані лише у вашому браузері.
     </div>
     <p>Як захистити себе:</p>
     <ul>
@@ -129,8 +161,8 @@
       <li>🔐 Увімкніть двоетапну автентифікацію</li>
       <li>🗣️ Сумніваєтесь — запитайте дорослого або того, хто надіслав, іншим каналом</li>
     </ul>
-    <br>
-    <button id="back">← Повернутися на початок</button>
+    <div class="author">Автор: Kapys Roman</div>
+    <button id="back" type="button">← Повернутися на початок</button>
   </div>
 </div>
 
@@ -140,6 +172,9 @@
    геолокації, камери чи мікрофона. "Дані" — це лише те, що браузер і так
    знає локально, + вигадані значення. Усе малюється лише на екрані. */
 
+const SPEED = 1;            // 1 = ~13 секунд. Менше число = швидше, більше = повільніше.
+const COUNTDOWN_START = 15; // секунд на фейковому таймері
+
 let finished = false;
 
 /* --- "Неможливо закрити" (м'яка версія: попередження браузера + блок "Назад") --- */
@@ -147,33 +182,39 @@ window.addEventListener("beforeunload", e => { if(!finished){ e.preventDefault()
 history.pushState(null, "", location.href);
 window.addEventListener("popstate", () => { if(!finished) history.pushState(null, "", location.href); });
 document.addEventListener("contextmenu", e => { if(!finished) e.preventDefault(); });
-document.addEventListener("click", () => {
-  if(!finished && document.documentElement.requestFullscreen && !document.fullscreenElement)
-    document.documentElement.requestFullscreen().catch(()=>{});
-}, {once:true});
+const tryFs = () => {
+  const el = document.documentElement;
+  if(!finished && el.requestFullscreen && !document.fullscreenElement) el.requestFullscreen().catch(()=>{});
+};
+document.addEventListener("click", tryFs, {once:true});
+document.addEventListener("touchend", tryFs, {once:true});
 
-/* --- Matrix-дощ --- */
+/* --- Matrix-дощ (легкий, щоб не гріти телефон) --- */
 const cv = document.getElementById("rain"), cx = cv.getContext("2d");
-let cols, drops;
+const STEP = innerWidth < 600 ? 18 : 16;
+let cols, drops, lastW = 0;
 function sizeRain(){
+  if(innerWidth === lastW && cv.height) return; // адресний рядок на телефоні міняє тільки висоту
+  lastW = innerWidth;
   cv.width = innerWidth; cv.height = innerHeight;
-  cols = Math.floor(cv.width/16); drops = Array(cols).fill(0).map(()=>Math.random()*-50);
+  cols = Math.floor(cv.width/STEP);
+  drops = Array(cols).fill(0).map(()=>Math.random()*-50);
 }
 sizeRain(); addEventListener("resize", sizeRain);
 const chars = "01ABCDEFабвгдеєжзиіїйклмнопрстуфхцчшщюя#$%&@<>/\\{}[]";
 setInterval(()=>{
   cx.fillStyle = "rgba(0,0,0,.08)"; cx.fillRect(0,0,cv.width,cv.height);
-  cx.fillStyle = "#ff1744"; cx.font = "15px monospace";
+  cx.fillStyle = "#ff1744"; cx.font = (STEP-1)+"px monospace";
   for(let i=0;i<cols;i++){
-    cx.fillText(chars[Math.floor(Math.random()*chars.length)], i*16, drops[i]*16);
-    if(drops[i]*16 > cv.height && Math.random() > .975) drops[i] = 0;
+    cx.fillText(chars[Math.floor(Math.random()*chars.length)], i*STEP, drops[i]*STEP);
+    if(drops[i]*STEP > cv.height && Math.random() > .975) drops[i] = 0;
     drops[i]++;
   }
-}, 45);
+}, 55);
 
 /* --- Допоміжне --- */
 const $ = id => document.getElementById(id);
-const sleep = ms => new Promise(r => setTimeout(r, ms));
+const sleep = ms => new Promise(r => setTimeout(r, ms*SPEED));
 const rnd = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
 const hex = n => Array.from({length:n},()=>rnd(0,15).toString(16)).join("").toUpperCase();
 $("sid").textContent = hex(4)+"-"+hex(4)+"-"+hex(4);
@@ -184,18 +225,21 @@ function log(t, cls=""){
   if(cls) d.className = cls;
   d.textContent = "> " + t;
   logBox.appendChild(d);
-  while(logBox.children.length > 16) logBox.removeChild(logBox.firstChild);
+  while(logBox.children.length > 14) logBox.removeChild(logBox.firstChild);
 }
 const mask = s => s[0] + "•".repeat(rnd(6,9));
 
 /* --- Інфо про пристрій (тільки локально, нічого не надсилається) --- */
 const tz = (Intl.DateTimeFormat().resolvedOptions().timeZone) || "невідомо";
 const ua = navigator.userAgent;
-const browser = /Edg\//.test(ua)?"Edge":/OPR\//.test(ua)?"Opera":/Chrome\//.test(ua)?"Chrome":/Firefox\//.test(ua)?"Firefox":/Safari\//.test(ua)?"Safari":"невідомий";
-const os = /Windows/.test(ua)?"Windows":/Android/.test(ua)?"Android":/iPhone|iPad/.test(ua)?"iOS":/Mac/.test(ua)?"macOS":/Linux/.test(ua)?"Linux":"невідома";
+const browser = /SamsungBrowser/.test(ua)?"Samsung Internet":/EdgA|EdgiOS|Edg\//.test(ua)?"Edge":/OPR\/|OPiOS/.test(ua)?"Opera":/FxiOS|Firefox/.test(ua)?"Firefox":/CriOS|Chrome\//.test(ua)?"Chrome":/Safari\//.test(ua)?"Safari":"невідомий";
+const os = /Windows/.test(ua)?"Windows":/Android/.test(ua)?"Android":/iPhone|iPad|iPod/.test(ua)?"iOS":/Mac/.test(ua)?"macOS":/Linux/.test(ua)?"Linux":"невідома";
+const model = (ua.match(/;\s*(SM-[A-Za-z0-9]+)/)||[])[1];
+const device = /iPhone/.test(ua)?"iPhone":/iPad/.test(ua)?"iPad":model?("Samsung "+model):/Android/.test(ua)?"Android-пристрій":"Комп'ютер";
 const fakeIp = `203.0.113.${rnd(2,250)}`; // адреса з тестового діапазону, вигадана
 function showInfo(stage){
   const lines = [];
+  lines.push(`<b>Пристрій:</b> ${device}`);
   lines.push(`<b>ОС:</b> ${os}`);
   lines.push(`<b>Браузер:</b> ${browser}`);
   if(stage>=1) lines.push(`<b>Часовий пояс:</b> ${tz}`);
@@ -220,44 +264,46 @@ const stages = [
   {pct:90,  name:"Шифрування файлів на пристрої…",     logs:["Генерація ключа AES-256","Шифрування документів","Файли заблоковано"]},
   {pct:100, name:"Завершення…",                         logs:["Видалення слідів","Передача даних замовнику","Готово."]}
 ];
-const ul = $("steps");
-stages.forEach((s,i)=>{ const li=document.createElement("li"); li.id="s"+i; li.textContent=s.name.replace("…",""); ul.appendChild(li); });
+const chips = $("chips");
+stages.forEach((s,i)=>{ const c=document.createElement("span"); c.id="c"+i; c.textContent=s.pct+"%"; chips.appendChild(c); });
 
 /* --- Зворотний відлік (для страху) --- */
-let left = 5*60;
+let left = COUNTDOWN_START;
+const fmt = n => "00:" + String(n).padStart(2,"0");
+$("count").textContent = fmt(left);
 const cd = setInterval(()=>{
   left = Math.max(0, left-1);
-  $("count").textContent = String(Math.floor(left/60)).padStart(2,"0")+":"+String(left%60).padStart(2,"0");
-}, 1000);
+  $("count").textContent = fmt(left);
+}, 1000*SPEED);
 
 /* --- Головний цикл --- */
 async function run(){
   let cur = 0;
   log("Запуск модуля проникнення v"+rnd(2,9)+"."+rnd(0,9), "warn");
-  await sleep(900);
+  await sleep(500);
   for(let i=0;i<stages.length;i++){
     const s = stages[i];
     $("task").textContent = s.name;
-    document.querySelectorAll(".steps li").forEach(l=>l.classList.remove("now"));
-    $("s"+i).classList.add("now");
+    document.querySelectorAll(".chips span").forEach(c=>c.classList.remove("now"));
+    $("c"+i).classList.add("now");
     for(const line of s.logs){
       log(line.replace("{pw}", mask("pa")+" / "+mask("qw")+" / "+mask("12")), "ok");
-      await sleep(rnd(350,700));
+      await sleep(rnd(160,260));
     }
-    // плавне заповнення смуги
+    // швидке заповнення смуги
     while(cur < s.pct){
       cur++;
       $("pct").textContent = cur+"%";
       $("fill").style.width = cur+"%";
-      if(Math.random()<.12) log("0x"+hex(8)+"  "+hex(16), "");
-      await sleep(rnd(40,120));
+      if(Math.random()<.2) log("0x"+hex(8)+"  "+hex(16), "");
+      await sleep(rnd(30,60));
     }
-    $("s"+i).classList.remove("now"); $("s"+i).classList.add("done");
+    $("c"+i).classList.remove("now"); $("c"+i).classList.add("done");
     showInfo(Math.min(i+1,5));
-    // раптова "зависання" на 99% для напруження
-    if(i === stages.length-2){ await sleep(1200); }
+    // коротка пауза перед фіналом для напруження
+    if(i === stages.length-2){ await sleep(600); }
   }
-  await sleep(900);
+  await sleep(500);
   finish();
 }
 

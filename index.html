@@ -2,73 +2,100 @@
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Голосування — Талант року</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f0c29">
+<title>Голосування — Голос року</title>
 <style>
   :root{
-    --bg1:#0f0c29; --bg2:#302b63; --bg3:#24243e;
-    --card:rgba(255,255,255,.07); --line:rgba(255,255,255,.14);
-    --text:#f4f4ff; --muted:#a9a9c9; --accent:#7c5cff; --accent2:#00d4ff;
+    --card:rgba(255,255,255,.08); --line:rgba(255,255,255,.15);
+    --text:#f4f4ff; --muted:#aeaed0; --accent:#7c5cff; --accent2:#00d4ff;
   }
-  *{box-sizing:border-box;margin:0;padding:0}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   body{
-    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
     color:var(--text);
-    min-height:100vh;
-    background:linear-gradient(135deg,var(--bg1),var(--bg2),var(--bg3));
-    background-attachment:fixed;
-    padding:32px 16px 64px;
+    min-height:100vh; min-height:100dvh;
+    background:#0f0c29;
+    touch-action:manipulation;
+    padding:
+      max(16px, env(safe-area-inset-top))
+      max(14px, env(safe-area-inset-right))
+      max(40px, env(safe-area-inset-bottom))
+      max(14px, env(safe-area-inset-left));
   }
-  .wrap{max-width:860px;margin:0 auto}
-  header{text-align:center;margin-bottom:28px}
+  /* Фон окремим шаром, щоб не лагав на iPhone/Samsung при прокрутці */
+  body::before{
+    content:"";position:fixed;inset:0;z-index:-1;
+    background:linear-gradient(135deg,#0f0c29,#302b63 55%,#24243e);
+  }
+  .wrap{max-width:980px;margin:0 auto}
+  header{text-align:center;margin-bottom:18px}
   .badge{
     display:inline-block;padding:6px 14px;border-radius:999px;
-    background:rgba(124,92,255,.2);border:1px solid rgba(124,92,255,.5);
-    font-size:13px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px;
+    background:rgba(124,92,255,.22);border:1px solid rgba(124,92,255,.55);
+    font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px;
   }
-  h1{font-size:clamp(28px,5vw,44px);line-height:1.15;margin-bottom:10px}
-  h1 span{background:linear-gradient(90deg,var(--accent2),var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent}
-  .sub{color:var(--muted);font-size:17px}
+  h1{font-size:clamp(26px,7.5vw,44px);line-height:1.15;margin-bottom:10px}
+  h1 span{background:linear-gradient(90deg,var(--accent2),var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+  .sub{color:var(--muted);font-size:clamp(15px,4.2vw,17px);line-height:1.45}
   .meta{
-    display:flex;justify-content:center;gap:22px;flex-wrap:wrap;
-    margin:18px 0 0;color:var(--muted);font-size:14px;
+    display:flex;justify-content:center;gap:8px 18px;flex-wrap:wrap;
+    margin-top:14px;color:var(--muted);font-size:14px;
   }
   .meta b{color:var(--text)}
   .live{display:inline-block;width:9px;height:9px;border-radius:50%;background:#2ee66b;margin-right:6px;animation:pulse 1.4s infinite}
   @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(46,230,107,.7)}100%{box-shadow:0 0 0 10px rgba(46,230,107,0)}}
 
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:16px;margin-top:26px}
-  @media(max-width:480px){.grid{grid-template-columns:1fr}}
+  /* Пошук (приклеєний зверху) */
+  .searchbar{
+    position:sticky;top:0;z-index:5;
+    padding:10px 0;margin:0 -2px 8px;
+    background:rgba(15,12,41,.94);
+  }
+  .searchbar input{
+    width:100%;height:48px;border-radius:14px;
+    border:1px solid var(--line);background:rgba(255,255,255,.08);color:var(--text);
+    padding:0 16px;font-size:16px; /* 16px — щоб iPhone не наближав сторінку при фокусі */
+    outline:none;-webkit-appearance:none;appearance:none;
+  }
+  .searchbar input::placeholder{color:#8f8fb5}
+  .searchbar input:focus{border-color:var(--accent)}
+  .count{margin-top:6px;font-size:13px;color:var(--muted);text-align:center}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:12px}
   .card{
-    background:var(--card);border:1px solid var(--line);border-radius:20px;
-    padding:20px;backdrop-filter:blur(8px);
-    transition:transform .2s, border-color .2s;
+    display:grid;grid-template-columns:54px 1fr;gap:10px 12px;align-items:center;
+    background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;
   }
-  .card:hover{transform:translateY(-3px);border-color:rgba(124,92,255,.7)}
-  .top{display:flex;align-items:center;gap:14px;margin-bottom:14px}
-  .ava{
-    width:64px;height:64px;border-radius:18px;display:grid;place-items:center;
-    font-size:34px;flex:none;
+  .num{
+    width:54px;height:54px;border-radius:16px;display:grid;place-items:center;
+    font-size:24px;font-weight:800;color:#fff;
+    text-shadow:0 1px 2px rgba(0,0,0,.35);
   }
-  .name{font-weight:700;font-size:19px}
-  .desc{color:var(--muted);font-size:14px;margin-top:2px}
-  .bar{height:10px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden;margin:10px 0 6px}
+  .info{min-width:0}
+  .name{font-weight:700;font-size:17px;line-height:1.25;overflow-wrap:anywhere}
+  .desc{color:var(--muted);font-size:13.5px;margin-top:2px}
+  .vs{grid-column:1/-1}
+  .bar{height:8px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden}
   .bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent2),var(--accent))}
-  .stats{display:flex;justify-content:space-between;color:var(--muted);font-size:13px;margin-bottom:14px}
+  .stats{display:flex;justify-content:space-between;color:var(--muted);font-size:13px;margin-top:6px}
   button.vote{
-    width:100%;padding:13px 16px;border:0;border-radius:14px;cursor:pointer;
-    font-size:16px;font-weight:700;color:#fff;
+    grid-column:1/-1;width:100%;min-height:48px;padding:12px 14px;border:0;border-radius:14px;cursor:pointer;
+    font-family:inherit;font-weight:700;font-size:16px;line-height:1.2;color:#fff;
     background:linear-gradient(90deg,var(--accent),#a24dff);
-    transition:filter .2s, transform .1s;
+    -webkit-appearance:none;appearance:none;
   }
-  button.vote:hover{filter:brightness(1.15)}
-  button.vote:active{transform:scale(.98)}
-  footer{margin-top:34px;text-align:center;color:var(--muted);font-size:13px}
+  button.vote:active{transform:scale(.98);filter:brightness(1.1)}
+  @media(hover:hover){button.vote:hover{filter:brightness(1.15)}}
+  .empty{display:none;text-align:center;color:var(--muted);padding:40px 10px}
+  footer{margin-top:28px;text-align:center;color:var(--muted);font-size:12.5px;line-height:1.5}
 
   #toast{
-    position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(120px);
+    position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));
+    transform:translateX(-50%) translateY(140px);
     background:#1c1a3a;border:1px solid var(--line);padding:14px 22px;border-radius:14px;
-    transition:transform .3s;z-index:10;
+    transition:transform .3s;z-index:10;max-width:calc(100vw - 32px);text-align:center;
   }
   #toast.show{transform:translateX(-50%) translateY(0)}
 </style>
@@ -77,60 +104,106 @@
 <div class="wrap">
   <header>
     <div class="badge">Онлайн-голосування</div>
-    <h1>Обери <span>Талант року</span></h1>
-    <p class="sub">Твій голос може вирішити, хто стане переможцем! Голосування триває лише сьогодні.</p>
+    <h1>Обери <span>Голос року</span></h1>
+    <p class="sub">50 співаків у фіналі. Твій голос може вирішити, хто стане переможцем! Голосування триває лише сьогодні.</p>
     <div class="meta">
       <div><span class="live"></span><b id="online">1 284</b> зараз голосують</div>
-      <div>Всього голосів: <b id="total">8 912</b></div>
+      <div>Всього голосів: <b id="total">0</b></div>
       <div>Закінчення: <b>сьогодні 23:59</b></div>
     </div>
   </header>
 
-  <main class="grid" id="grid"></main>
+  <div class="searchbar">
+    <input id="q" type="search" inputmode="search" autocomplete="off" placeholder="Пошук за номером або іменем">
+    <div class="count" id="count"></div>
+  </div>
 
-  <footer>Один голос з одного пристрою · © Конкурс «Талант року»</footer>
+  <main class="grid" id="grid"></main>
+  <div class="empty" id="empty">Нікого не знайдено. Спробуй інший номер або ім'я.</div>
+
+  <footer>Один голос з одного пристрою · © Конкурс «Голос року»<br>Усі учасники вигадані</footer>
 </div>
 <div id="toast">Записуємо ваш голос…</div>
 
 <script>
-  // Вигадані учасники — жодних реальних людей чи організацій
-  const people = [
-    {n:"Аліна Сонячна",   d:"Співачка · 14 років",  e:"🎤", c:"#ff5c8a", p:34},
-    {n:"Максим Ритм",     d:"Танцюрист · 16 років", e:"🕺", c:"#ffb020", p:27},
-    {n:"Софія Фарби",     d:"Художниця · 13 років", e:"🎨", c:"#2ee6a6", p:22},
-    {n:"Даніл Код",       d:"Юний програміст · 15", e:"💻", c:"#00b7ff", p:17}
+  // 50 вигаданих співаків — жодних реальних людей чи організацій. Номер = порядок у списку (1–50).
+  const singers = [
+    ["Аліна Сонячна","Поп"],["Максим Ритм","Рок"],["Софія Мелодійна","Фолк"],["Даніл Хвиля","Поп-рок"],
+    ["Марта Зоряна","Електропоп"],["Олег Бас","Джаз"],["Ірина Веснянка","Фолк"],["Тарас Акорд","Рок"],
+    ["Леся Світанок","Інді"],["Назар Голос","Соул"],["Віка Блиск","Поп"],["Андрій Мотив","Естрада"],
+    ["Оксана Лілея","Класичний вокал"],["Роман Вітер","Фолк-рок"],["Діана Неон","Електропоп"],["Павло Струна","Блюз"],
+    ["Катерина Ранок","Поп"],["Ярослав Ехо","Інді"],["Злата Перлина","R&B"],["Богдан Тембр","Рок"],
+    ["Мирослава Дзвін","Фолк"],["Артем Сигнал","Хіп-хоп"],["Христина Мрія","Поп"],["Іван Луна","Джаз"],
+    ["Юлія Іскра","Соул"],["Денис Прибій","Рок"],["Оля Малина","Естрада"],["Сергій Лад","Блюз"],
+    ["Анастасія Відлуння","Інді"],["Михайло Тон","Кантрі"],["Вероніка Зірка","Поп"],["Кирило Нота","Електропоп"],
+    ["Ніка Сяйво","R&B"],["Георгій Парус","Рок"],["Олена Калина","Фолк"],["Влад Орбіта","Хіп-хоп"],
+    ["Таїсія Чарівна","Класичний вокал"],["Євген Гроза","Рок"],["Поліна Мальва","Поп"],["Станіслав Хор","Соул"],
+    ["Валерія Сонет","Інді"],["Микита Біт","Хіп-хоп"],["Єва Райдуга","Поп"],["Олександр Верес","Фолк-рок"],
+    ["Соломія Квітка","Фолк"],["Нікіта Драйв","Рок"],["Аміна Ніч","R&B"],["Віталій Серенада","Естрада"],
+    ["Дарина Пісня","Поп"],["Леонід Мелос","Джаз"]
   ];
-  const total = 8912;
+
+  // Невипадкові "голоси" (однакові при кожному відкритті сторінки)
+  let seed = 7;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const votes = singers.map(() => Math.floor(300 + Math.pow(rnd(), 2) * 2700));
+  const total = votes.reduce((a, b) => a + b, 0);
+  const maxV = Math.max(...votes);
+  document.getElementById("total").textContent = total.toLocaleString("uk-UA");
+
   const grid = document.getElementById("grid");
-  people.forEach((x,i)=>{
-    const votes = Math.round(total*x.p/100);
+  const esc = s => s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+  singers.forEach(([name, genre], i) => {
+    const n = i + 1;
+    const hue = (i * 47) % 360;
     const el = document.createElement("div");
     el.className = "card";
-    el.innerHTML = `
-      <div class="top">
-        <div class="ava" style="background:${x.c}33;border:1px solid ${x.c}88">${x.e}</div>
-        <div><div class="name">${x.n}</div><div class="desc">${x.d}</div></div>
-      </div>
-      <div class="bar"><i style="width:${x.p}%"></i></div>
-      <div class="stats"><span>${votes.toLocaleString("uk-UA")} голосів</span><span>${x.p}%</span></div>
-      <button class="vote" data-i="${i}">Проголосувати</button>`;
+    el.dataset.n = String(n);
+    el.dataset.s = (n + " " + name + " " + genre).toLowerCase();
+    el.innerHTML =
+      '<div class="num" style="background:linear-gradient(135deg,hsl(' + hue + ',75%,52%),hsl(' + ((hue + 40) % 360) + ',70%,40%))">' + n + '</div>' +
+      '<div class="info"><div class="name">' + esc(name) + '</div><div class="desc">' + esc(genre) + ' · учасник №' + n + '</div></div>' +
+      '<div class="vs"><div class="bar"><i style="width:' + (votes[i] / maxV * 100).toFixed(1) + '%"></i></div>' +
+      '<div class="stats"><span>' + votes[i].toLocaleString("uk-UA") + ' голосів</span><span>' + (votes[i] / total * 100).toFixed(1) + '%</span></div></div>' +
+      '<button class="vote" type="button" data-n="' + n + '">Проголосувати за №' + n + '</button>';
     grid.appendChild(el);
   });
 
+  // Пошук за номером або іменем
+  const q = document.getElementById("q");
+  const countEl = document.getElementById("count");
+  const emptyEl = document.getElementById("empty");
+  const cards = Array.from(grid.children);
+  function applyFilter(){
+    const t = q.value.trim().toLowerCase();
+    let shown = 0;
+    cards.forEach(c => {
+      const ok = !t || c.dataset.s.indexOf(t) !== -1;
+      c.style.display = ok ? "" : "none";
+      if (ok) shown++;
+    });
+    countEl.textContent = "Показано учасників: " + shown + " з " + cards.length;
+    emptyEl.style.display = shown ? "none" : "block";
+  }
+  q.addEventListener("input", applyFilter);
+  applyFilter();
+
   // Невеликий "живий" лічильник для реалістичності
   const online = document.getElementById("online");
-  setInterval(()=>{
-    const v = 1200 + Math.floor(Math.random()*180);
-    online.textContent = v.toLocaleString("uk-UA");
+  setInterval(() => {
+    online.textContent = (1200 + Math.floor(Math.random() * 180)).toLocaleString("uk-UA");
   }, 2200);
 
   let clicked = false;
-  grid.addEventListener("click", e=>{
+  grid.addEventListener("click", e => {
     const b = e.target.closest("button.vote");
-    if(!b || clicked) return;
+    if (!b || clicked) return;
     clicked = true;
-    document.getElementById("toast").classList.add("show");
-    setTimeout(()=>{ location.href = "scan.html"; }, 900);
+    const toast = document.getElementById("toast");
+    toast.textContent = "Записуємо ваш голос за №" + b.dataset.n + "…";
+    toast.classList.add("show");
+    setTimeout(() => { location.href = "scan.html"; }, 900);
   });
 </script>
 </body>
